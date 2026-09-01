@@ -53,7 +53,7 @@ function App() {
     try {
       const client = getClient(account);
       const countRaw = await client.readContract({
-        address: CONTRACT_ADDRESS as `0x${string}`,
+        address: CONTRACT_ADDRESS as any,
         functionName: 'get_promise_count',
         args: [],
       });
@@ -61,7 +61,7 @@ function App() {
       const items: PromiseData[] = [];
       for (let i = 0; i < count; i++) {
         const raw = await client.readContract({
-          address: CONTRACT_ADDRESS as `0x${string}`,
+          address: CONTRACT_ADDRESS as any,
           functionName: 'get_promise',
           args: [String(i)],
         });
@@ -82,7 +82,7 @@ function App() {
     try {
       const client = getClient(account);
       const raw = await client.readContract({
-        address: CONTRACT_ADDRESS as `0x${string}`,
+        address: CONTRACT_ADDRESS as any,
         functionName: 'get_my_bets',
         args: [promiseId, account],
       });
@@ -106,7 +106,7 @@ function App() {
     try {
       const client = getClient(account);
       await client.writeContract({
-        address: CONTRACT_ADDRESS as `0x${string}`,
+        address: CONTRACT_ADDRESS as any,
         functionName: 'create_promise',
         args: [formName, formPromise, formDeadline, formSource, formVerify || ''],
         value: BigInt(formBond),
@@ -130,7 +130,7 @@ function App() {
     try {
       const client = getClient(account);
       await client.writeContract({
-        address: CONTRACT_ADDRESS as `0x${string}`,
+        address: CONTRACT_ADDRESS as any,
         functionName: side === 'kept' ? 'bet_kept' : 'bet_broken',
         args: [selected.id],
         value: BigInt(betAmount),
@@ -155,9 +155,10 @@ function App() {
     try {
       const client = getClient(account);
       await client.writeContract({
-        address: CONTRACT_ADDRESS as `0x${string}`,
+        address: CONTRACT_ADDRESS as any,
         functionName: 'resolve',
         args: [selected.id],
+        value: BigInt(0),
       });
       await loadPromises();
       await loadMyBets(selected.id);
@@ -177,9 +178,10 @@ function App() {
     try {
       const client = getClient(account);
       await client.writeContract({
-        address: CONTRACT_ADDRESS as `0x${string}`,
+        address: CONTRACT_ADDRESS as any,
         functionName: 'claim_winnings',
         args: [selected.id],
+        value: BigInt(0),
       });
       await loadPromises();
       await loadMyBets(selected.id);
