@@ -141,6 +141,52 @@ class TestCreatePromiseFast:
             ct.contract.get_promise(args=["999"]).call()
 
 
+class TestDeadlineGates:
+    @pytest.mark.fast
+    def test_bet_rejected_after_deadline(self, ct):
+        creator = ct.create_account()
+        ct.contract.connect(creator).create_promise(
+            args=["Mayor", "Fix roads", "2020-01-01", "https://x.com/promise", ""]
+        ).transact(value=1000)
+        bettor = ct.create_account()
+        with pytest.raises(Exception):
+            ct.contract.connect(bettor).bet_kept(args=["0"]).transact(value=500)
+
+    @pytest.mark.fast
+    def test_bet_broken_rejected_after_deadline(self, ct):
+        creator = ct.create_account()
+        ct.contract.connect(creator).create_promise(
+            args=["Mayor", "Fix roads", "2020-01-01", "https://x.com/promise", ""]
+        ).transact(value=1000)
+        bettor = ct.create_account()
+        with pytest.raises(Exception):
+            ct.contract.connect(bettor).bet_broken(args=["0"]).transact(value=500)
+
+    @pytest.mark.slow
+    def test_resolve_rejected_before_deadline(self, ct):
+        creator = ct.create_account()
+        ct.contract.connect(creator).create_promise(
+            args=["Mayor", "Fix roads", "2099-12-31", "https://x.com/promise", "https://x.com/verify"]
+        ).transact(value=1000)
+        install_mocks(ct)
+        resolver = ct.create_account()
+        with pytest.raises(Exception):
+            ct.contract.connect(resolver).resolve(args=["0"]).transact()
+
+    @pytest.mark.slow
+    def test_resolve_allowed_after_deadline(self, ct):
+        creator = ct.create_account()
+        ct.contract.connect(creator).create_promise(
+            args=["Mayor", "Fix roads", "2020-01-01", "https://x.com/promise", "https://x.com/verify"]
+        ).transact(value=1000)
+        install_mocks(ct, verdict="BROKEN", reason="Deadline long passed")
+        resolver = ct.create_account()
+        ct.contract.connect(resolver).resolve(args=["0"]).transact()
+        p = json.loads(ct.contract.get_promise(args=["0"]).call())
+        assert p["status"] == "RESOLVED"
+        assert p["verdict"] == "BROKEN"
+
+
 class TestBettingFast:
     @pytest.mark.fast
     def test_bet_kept_adds_to_pool(self, ct):
