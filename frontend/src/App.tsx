@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { connectWallet, getClient, CONTRACT_ADDRESS } from './config';
+import { connectWallet, getClient, getReadClient, CONTRACT_ADDRESS } from './config';
 import './App.css';
 
 /* ───────── types ───────── */
@@ -86,34 +86,52 @@ export default function App() {
     }
   };
 
+  const isDeadlinePassed = (deadline: string) => {
+    const today = new Date().toISOString().slice(0, 10);
+    return today >= deadline;
+  };
+
   /* ──────── data loading ──────── */
   const loadPromises = useCallback(async () => {
-    if (!account) return;
+    if (!CONTRACT_ADDRESS) return;
     try {
-      const client = getClient(account);
+      const client = getReadClient();
       const countRaw = await client.readContract({
         address: CONTRACT_ADDRESS as any,
         functionName: 'get_promise_count',
         args: [],
       });
       const count = parseInt(String(countRaw), 10);
+      if (isNaN(count) || count < 0) {
+        setPromises([]);
+        return;
+      }
       const items: PromiseData[] = [];
       for (let i = 0; i < count; i++) {
-        const raw = await client.readContract({
-          address: CONTRACT_ADDRESS as any,
-          functionName: 'get_promise',
-          args: [String(i)],
-        });
-        items.push(JSON.parse(String(raw)));
+        try {
+          const raw = await client.readContract({
+            address: CONTRACT_ADDRESS as any,
+            functionName: 'get_promise',
+            args: [String(i)],
+          });
+          items.push(JSON.parse(String(raw)));
+        } catch {
+          // skip individual promise read failures
+        }
       }
       setPromises(items);
     } catch (err: any) {
       console.error('Load error:', err);
+      setError('Could not load promises — the RPC may be temporarily unavailable.');
     }
-  }, [account]);
+  }, []);
 
   useEffect(() => {
-    if (account) loadPromises();
+    if (CONTRACT_ADDRESS) loadPromises();
+  }, [loadPromises]);
+
+  useEffect(() => {
+    if (account && CONTRACT_ADDRESS) loadPromises();
   }, [account, loadPromises]);
 
   const loadMyBets = async (promiseId: string) => {
@@ -643,36 +661,45 @@ export default function App() {
 
                   {selected.status === 'OPEN' && (
                     <div className="actions">
-                      <div className="bet-row">
-                        <input
-                          type="number"
-                          value={betAmount}
-                          onChange={(e) => setBetAmount(e.target.value)}
-                          min="100"
-                          placeholder="Bet amount"
-                        />
-                        <button
-                          onClick={() => handleBet('kept')}
-                          className="btn-kept"
-                          disabled={loading}
-                        >
-                          Bet KEPT
-                        </button>
-                        <button
-                          onClick={() => handleBet('broken')}
-                          className="btn-broken"
-                          disabled={loading}
-                        >
-                          Bet BROKEN
-                        </button>
-                      </div>
-                      <button
-                        onClick={handleResolve}
-                        className="btn-resolve"
-                        disabled={loading}
-                      >
-                        Resolve Promise
-                      </button>
+                      {!isDeadlinePassed(selected.deadline) ? (
+                        <>
+                          <div className="deadline-status open">Betting Open — closes {selected.deadline}</div>
+                          <div className="bet-row">
+                            <input
+                              type="number"
+                              value={betAmount}
+                              onChange={(e) => setBetAmount(e.target.value)}
+                              min="100"
+                              placeholder="Bet amount"
+                            />
+                            <button
+                              onClick={() => handleBet('kept')}
+                              className="btn-kept"
+                              disabled={loading}
+                            >
+                              Bet KEPT
+                            </button>
+                            <button
+                              onClick={() => handleBet('broken')}
+                              className="btn-broken"
+                              disabled={loading}
+                            >
+                              Bet BROKEN
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="deadline-status closed">Betting Closed — deadline passed</div>
+                          <button
+                            onClick={handleResolve}
+                            className="btn-resolve"
+                            disabled={loading}
+                          >
+                            Resolve Promise
+                          </button>
+                        </>
+                      )}
                     </div>
                   )}
 

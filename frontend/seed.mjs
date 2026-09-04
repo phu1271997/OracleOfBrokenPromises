@@ -8,6 +8,8 @@ const CHAIN = {
   nativeCurrency: { name: "GEN Token", symbol: "GEN", decimals: 18 },
 };
 const ENDPOINT = "https://studio.genlayer.com/api";
+
+// UPDATE THIS after redeploying the contract
 const CONTRACT = "0x685075748002380aa55a11c77FA2815DE4758233";
 
 function loadEnv() {
@@ -66,7 +68,7 @@ async function read(fn, args) {
 }
 
 async function main() {
-  console.log("=== Oracle of Broken Promises — Seed Script ===");
+  console.log("=== Oracle of Broken Promises — Seed Script (v2 with deadline gates) ===");
   console.log(`Wallet 1: ${account1.address}`);
   console.log(`Wallet 2: ${account2.address}`);
   console.log(`Contract: ${CONTRACT}`);
@@ -74,46 +76,53 @@ async function main() {
   const countBefore = parseInt(await read("get_promise_count", []) || "0", 10);
   console.log(`\nExisting promises: ${countBefore}`);
 
-  // Promise A: clearly KEPT (Apple Vision Pro launched Feb 2024)
+  // Promise A: PAST deadline — creator auto-bets KEPT, resolve immediately (expect KEPT)
+  // Apple Vision Pro shipped Feb 2024
   await write(client1, "create_promise", [
     "Tim Cook",
     "Apple will release the Vision Pro headset in early 2024 starting at $3,499",
     "2024-06-30",
     "https://www.apple.com/newsroom/2023/06/introducing-apple-vision-pro/",
     "https://en.wikipedia.org/wiki/Apple_Vision_Pro",
-  ], 1000n, "Promise A — Apple Vision Pro (expect KEPT)");
+  ], 1000n, "Promise A — Apple Vision Pro, deadline 2024-06-30 (past, expect KEPT)");
 
-  // Wallet 2 bets BROKEN on Promise A (will lose, for pool diversity)
-  const promiseAId = String(countBefore);
-  await write(client2, "bet_broken", [promiseAId], 500n, `Bet BROKEN on Promise #${promiseAId} from wallet 2`);
-
-  // Promise B: clearly BROKEN
+  // Promise B: PAST deadline — creator auto-bets KEPT, resolve immediately (expect BROKEN)
   await write(client1, "create_promise", [
     "Elon Musk",
-    "Tesla will produce 20 million vehicles per year by 2030",
+    "Tesla will produce 20 million vehicles per year by 2025",
     "2025-12-31",
     "https://en.wikipedia.org/wiki/Tesla,_Inc.",
     "https://en.wikipedia.org/wiki/Tesla,_Inc.",
-  ], 1000n, "Promise B — Tesla 20M target (expect BROKEN)");
+  ], 1000n, "Promise B — Tesla 20M, deadline 2025-12-31 (past, expect BROKEN)");
 
-  // Wallet 2 bets BROKEN on Promise B (will win)
+  // Promise C: FUTURE deadline — betting open, shows active market
+  await write(client1, "create_promise", [
+    "Sam Altman",
+    "OpenAI will achieve AGI by 2030",
+    "2030-12-31",
+    "https://en.wikipedia.org/wiki/OpenAI",
+    "",
+  ], 1000n, "Promise C — OpenAI AGI, deadline 2030-12-31 (future, active betting)");
+
+  const promiseAId = String(countBefore);
   const promiseBId = String(countBefore + 1);
-  await write(client2, "bet_broken", [promiseBId], 500n, `Bet BROKEN on Promise #${promiseBId} from wallet 2`);
+  const promiseCId = String(countBefore + 2);
 
-  // Resolve both (nondet — 30-120s each)
-  console.log("\n=== Resolving (AI consensus — may take 1-3 minutes each) ===");
+  // Bet on Promise C (future deadline — betting still open)
+  await write(client2, "bet_broken", [promiseCId], 500n, `Bet BROKEN on Promise #${promiseCId} (AGI) from wallet 2`);
+  await write(client2, "bet_kept", [promiseCId], 300n, `Bet KEPT on Promise #${promiseCId} (AGI) from wallet 2`);
 
-  await write(client1, "resolve", [promiseAId], 0n, `Resolve Promise #${promiseAId} (Vision Pro)`);
-  await write(client1, "resolve", [promiseBId], 0n, `Resolve Promise #${promiseBId} (Tesla 20M)`);
+  // Resolve A and B (past deadlines — resolution allowed)
+  console.log("\n=== Resolving past-deadline promises (AI consensus — 1-3 min each) ===");
 
-  // Claim winnings on the correct side
+  await write(client1, "resolve", [promiseAId], 0n, `Resolve #${promiseAId} — Vision Pro (past deadline)`);
+  await write(client1, "resolve", [promiseBId], 0n, `Resolve #${promiseBId} — Tesla 20M (past deadline)`);
+
+  // Claim winnings
   console.log("\n=== Claiming winnings ===");
-  // Wallet 1 bet KEPT on A (auto), should win if KEPT
-  await write(client1, "claim_winnings", [promiseAId], 0n, `Wallet 1 claim winnings on Promise #${promiseAId}`);
-  // Wallet 2 bet BROKEN on B, should win if BROKEN
-  await write(client2, "claim_winnings", [promiseBId], 0n, `Wallet 2 claim winnings on Promise #${promiseBId}`);
+  await write(client1, "claim_winnings", [promiseAId], 0n, `Wallet 1 claim on #${promiseAId} (should win if KEPT)`);
 
-  // Verify
+  // Verify final state
   console.log("\n=== Final state ===");
   const countAfter = parseInt(await read("get_promise_count", []) || "0", 10);
   for (let i = countBefore; i < countAfter; i++) {
