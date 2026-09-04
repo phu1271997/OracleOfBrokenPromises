@@ -10,7 +10,7 @@ const CHAIN = {
 const ENDPOINT = "https://studio.genlayer.com/api";
 
 // UPDATE THIS after redeploying the contract
-const CONTRACT = "0x685075748002380aa55a11c77FA2815DE4758233";
+const CONTRACT = "0xba9b91f159D08A0a1a84251B2559Cc3EF874E548";
 
 function loadEnv() {
   try {

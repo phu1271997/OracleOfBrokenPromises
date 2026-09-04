@@ -27,7 +27,7 @@ Oracle of Broken Promises is a decentralized prediction market for public figure
 ## Contract Address
 
 ```
-0x685075748002380aa55a11c77FA2815DE4758233
+0xba9b91f159D08A0a1a84251B2559Cc3EF874E548
 ```
 
 Network: GenLayer Studionet (Chain ID 61999)
@@ -38,7 +38,7 @@ Network: GenLayer Studionet (Chain ID 61999)
 
 - **Frontend**: https://oracle-of-broken-promises.vercel.app
 - **GitHub**: https://github.com/phu1271997/OracleOfBrokenPromises
-- **Explorer**: https://explorer-studio.genlayer.com/address/0x685075748002380aa55a11c77FA2815DE4758233
+- **Explorer**: https://explorer-studio.genlayer.com/address/0xba9b91f159D08A0a1a84251B2559Cc3EF874E548
 
 ---
 
@@ -95,4 +95,4 @@ pytest tests/ -m slow -v
 pytest tests/ -v
 ```
 
-Coverage: 26 tests (18 fast, 8 slow) covering create validation, betting pools, bet accumulation, all 4 verdict types, claim winnings, refund logic, double-resolve prevention, and full lifecycle.
+Coverage: 30 tests (20 fast, 10 slow) covering create validation, betting pools, bet accumulation, deadline gates (bet rejection after deadline, resolve rejection before deadline), all 4 verdict types, claim winnings, refund logic, double-resolve prevention, and full lifecycle.
