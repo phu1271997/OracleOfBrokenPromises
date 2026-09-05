@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { connectWallet, getClient, getReadClient, CONTRACT_ADDRESS } from './config';
+import { connectWallet, getClient, getReadClient, CONTRACT_ADDRESS, genToWei, weiToGen } from './config';
 import './App.css';
 
 /* ───────── types ───────── */
@@ -167,7 +167,7 @@ export default function App() {
         address: CONTRACT_ADDRESS as any,
         functionName: 'create_promise',
         args: [formName, formPromise, formDeadline, formSource, formVerify || ''],
-        value: BigInt(formBond),
+        value: genToWei(formBond),
       });
       setFormName('');
       setFormPromise('');
@@ -195,7 +195,7 @@ export default function App() {
         address: CONTRACT_ADDRESS as any,
         functionName: side === 'kept' ? 'bet_kept' : 'bet_broken',
         args: [selected.id],
-        value: BigInt(betAmount),
+        value: genToWei(betAmount),
       });
       await loadPromises();
       await loadMyBets(selected.id);
@@ -264,11 +264,12 @@ export default function App() {
   };
 
   const poolBar = (kept: string, broken: string) => {
-    const k = parseInt(kept, 10) || 0;
-    const b = parseInt(broken, 10) || 0;
+    let k = 0n, b = 0n;
+    try { k = BigInt(kept || '0'); } catch {}
+    try { b = BigInt(broken || '0'); } catch {}
     const total = k + b;
-    if (total === 0) return null;
-    const kPct = Math.round((k / total) * 100);
+    if (total === 0n) return null;
+    const kPct = Number((k * 100n) / total);
     return (
       <div className="pool-bar">
         <div className="pool-kept" style={{ width: `${kPct}%` }}>
@@ -282,10 +283,12 @@ export default function App() {
   };
 
   /* derived stats */
-  const totalPool = promises.reduce(
-    (sum, p) => sum + (parseInt(p.pool_kept, 10) || 0) + (parseInt(p.pool_broken, 10) || 0),
-    0,
-  );
+  const totalPoolWei = promises.reduce((sum, p) => {
+    let k = 0n, b = 0n;
+    try { k = BigInt(p.pool_kept || '0'); } catch {}
+    try { b = BigInt(p.pool_broken || '0'); } catch {}
+    return sum + k + b;
+  }, 0n);
   const resolvedCount = promises.filter((p) => p.status === 'RESOLVED').length;
   const resolvedPromises = promises.filter((p) => p.status === 'RESOLVED');
 
@@ -380,7 +383,7 @@ export default function App() {
             </div>
             <div className="stat-card">
               <span className="stat-value">
-                {totalPool.toLocaleString()}
+                {weiToGen(totalPoolWei)}
               </span>
               <span className="stat-label">Total Pool (GEN)</span>
             </div>
@@ -572,10 +575,13 @@ export default function App() {
                       <span>Deadline: {p.deadline}</span>
                       <span>
                         Pool:{' '}
-                        {(
-                          (parseInt(p.pool_kept, 10) || 0) +
-                          (parseInt(p.pool_broken, 10) || 0)
-                        ).toLocaleString()}{' '}
+                        {weiToGen(
+                          (() => {
+                            try {
+                              return BigInt(p.pool_kept || '0') + BigInt(p.pool_broken || '0');
+                            } catch { return 0n; }
+                          })(),
+                        )}{' '}
                         GEN
                       </span>
                     </div>
@@ -625,13 +631,13 @@ export default function App() {
                   <div className="detail-row">
                     <label>Pool KEPT</label>
                     <span className="amount-kept">
-                      {(parseInt(selected.pool_kept, 10) || 0).toLocaleString()} GEN
+                      {weiToGen(selected.pool_kept)} GEN
                     </span>
                   </div>
                   <div className="detail-row">
                     <label>Pool BROKEN</label>
                     <span className="amount-broken">
-                      {(parseInt(selected.pool_broken, 10) || 0).toLocaleString()} GEN
+                      {weiToGen(selected.pool_broken)} GEN
                     </span>
                   </div>
 
@@ -653,8 +659,8 @@ export default function App() {
                     <div className="my-bets">
                       <label>Your Bets</label>
                       <span>
-                        KEPT: {(parseInt(myBets.kept, 10) || 0).toLocaleString()} GEN | BROKEN:{' '}
-                        {(parseInt(myBets.broken, 10) || 0).toLocaleString()} GEN
+                        KEPT: {weiToGen(myBets.kept)} GEN | BROKEN:{' '}
+                        {weiToGen(myBets.broken)} GEN
                       </span>
                     </div>
                   )}
@@ -743,8 +749,8 @@ export default function App() {
           {resolvedPromises.length > 0 ? (
             <div className="verdicts-grid">
               {resolvedPromises.map((p) => {
-                const k = parseInt(p.pool_kept, 10) || 0;
-                const b = parseInt(p.pool_broken, 10) || 0;
+                let poolTotal = 0n;
+                try { poolTotal = BigInt(p.pool_kept || '0') + BigInt(p.pool_broken || '0'); } catch {}
                 return (
                   <div key={p.id} className="verdict-showcase-card">
                     <div className="verdict-showcase-header">
@@ -758,7 +764,7 @@ export default function App() {
                     </p>
                     {poolBar(p.pool_kept, p.pool_broken)}
                     <div style={{ marginTop: 12, marginBottom: 12, fontSize: '0.8rem', color: '#888' }}>
-                      Pool: {(k + b).toLocaleString()} GEN
+                      Pool: {weiToGen(poolTotal)} GEN
                     </div>
                     {p.reason && (
                       <div className="verdict-reasoning">{p.reason}</div>

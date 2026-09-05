@@ -84,7 +84,7 @@ async function main() {
     "2024-06-30",
     "https://www.apple.com/newsroom/2023/06/introducing-apple-vision-pro/",
     "https://en.wikipedia.org/wiki/Apple_Vision_Pro",
-  ], 1000n, "Promise A — Apple Vision Pro, deadline 2024-06-30 (past, expect KEPT)");
+  ], 1000n * 10n ** 18n, "Promise A — Apple Vision Pro, deadline 2024-06-30 (past, expect KEPT)");
 
   // Promise B: PAST deadline — creator auto-bets KEPT, resolve immediately (expect BROKEN)
   await write(client1, "create_promise", [
@@ -93,7 +93,7 @@ async function main() {
     "2025-12-31",
     "https://en.wikipedia.org/wiki/Tesla,_Inc.",
     "https://en.wikipedia.org/wiki/Tesla,_Inc.",
-  ], 1000n, "Promise B — Tesla 20M, deadline 2025-12-31 (past, expect BROKEN)");
+  ], 1000n * 10n ** 18n, "Promise B — Tesla 20M, deadline 2025-12-31 (past, expect BROKEN)");
 
   // Promise C: FUTURE deadline — betting open, shows active market
   await write(client1, "create_promise", [
@@ -102,15 +102,15 @@ async function main() {
     "2030-12-31",
     "https://en.wikipedia.org/wiki/OpenAI",
     "",
-  ], 1000n, "Promise C — OpenAI AGI, deadline 2030-12-31 (future, active betting)");
+  ], 1000n * 10n ** 18n, "Promise C — OpenAI AGI, deadline 2030-12-31 (future, active betting)");
 
   const promiseAId = String(countBefore);
   const promiseBId = String(countBefore + 1);
   const promiseCId = String(countBefore + 2);
 
   // Bet on Promise C (future deadline — betting still open)
-  await write(client2, "bet_broken", [promiseCId], 500n, `Bet BROKEN on Promise #${promiseCId} (AGI) from wallet 2`);
-  await write(client2, "bet_kept", [promiseCId], 300n, `Bet KEPT on Promise #${promiseCId} (AGI) from wallet 2`);
+  await write(client2, "bet_broken", [promiseCId], 500n * 10n ** 18n, `Bet BROKEN 500 GEN on Promise #${promiseCId} (AGI) from wallet 2`);
+  await write(client2, "bet_kept", [promiseCId], 300n * 10n ** 18n, `Bet KEPT 300 GEN on Promise #${promiseCId} (AGI) from wallet 2`);
 
   // Resolve A and B (past deadlines — resolution allowed)
   console.log("\n=== Resolving past-deadline promises (AI consensus — 1-3 min each) ===");
