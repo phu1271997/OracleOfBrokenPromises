@@ -61,6 +61,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [loadingMsg, setLoadingMsg] = useState('');
   const [error, setError] = useState('');
+  const [lastTx, setLastTx] = useState<{ hash: string; status: string; label: string } | null>(null);
 
   /* ---- form state ---- */
   const [formName, setFormName] = useState('');
@@ -155,20 +156,62 @@ export default function App() {
   };
 
   /* ──────── transactions ──────── */
+  const sendWrite = async (
+    label: string,
+    fn: string,
+    args: any[],
+    value: bigint,
+    loadingCopy: string,
+  ) => {
+    setLoading(true);
+    setLoadingMsg(loadingCopy);
+    setError('');
+    setLastTx(null);
+    const client = getClient(account);
+    const hash = await client.writeContract({
+      address: CONTRACT_ADDRESS as any,
+      functionName: fn,
+      args,
+      value,
+    });
+    setLastTx({ hash: String(hash), status: 'PENDING', label });
+    setLoadingMsg(`${loadingCopy} — awaiting consensus...`);
+    let status = 'FINALIZED';
+    let execResult = 'SUCCESS';
+    try {
+      const receipt: any = await client.waitForTransactionReceipt({
+        hash: hash as any,
+        status: 'FINALIZED' as any,
+        retries: 200,
+        interval: 3000,
+      });
+      status = receipt?.statusName || 'FINALIZED';
+      const lr = receipt?.consensus_data?.leader_receipt?.[0];
+      execResult = lr?.execution_result || 'SUCCESS';
+      if (execResult !== 'SUCCESS') {
+        const stderr = String(lr?.genvm_result?.stderr || '');
+        const userErr = stderr.match(/UserError\(['"]([^'"]+)['"]\)/)?.[1]
+          || stderr.split('\n').filter(Boolean).pop()
+          || 'Contract execution reverted';
+        throw new Error(userErr);
+      }
+    } finally {
+      setLastTx({ hash: String(hash), status: `${status} · ${execResult}`, label });
+    }
+    return hash;
+  };
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!account) return;
-    setLoading(true);
-    setLoadingMsg('Creating promise on-chain...');
-    setError('');
     try {
-      const client = getClient(account);
-      await client.writeContract({
-        address: CONTRACT_ADDRESS as any,
-        functionName: 'create_promise',
-        args: [formName, formPromise, formDeadline, formSource, formVerify || ''],
-        value: genToWei(formBond),
-      });
+      await sendWrite(
+        'create_promise',
+        'create_promise',
+        [formName, formPromise, formDeadline, formSource, formVerify || ''],
+        genToWei(formBond),
+        'Creating promise on-chain',
+      );
       setFormName('');
       setFormPromise('');
       setFormDeadline('');
@@ -186,17 +229,14 @@ export default function App() {
 
   const handleBet = async (side: 'kept' | 'broken') => {
     if (!account || !selected) return;
-    setLoading(true);
-    setLoadingMsg(`Placing bet on ${side.toUpperCase()}...`);
-    setError('');
     try {
-      const client = getClient(account);
-      await client.writeContract({
-        address: CONTRACT_ADDRESS as any,
-        functionName: side === 'kept' ? 'bet_kept' : 'bet_broken',
-        args: [selected.id],
-        value: genToWei(betAmount),
-      });
+      await sendWrite(
+        `bet_${side}`,
+        side === 'kept' ? 'bet_kept' : 'bet_broken',
+        [selected.id],
+        genToWei(betAmount),
+        `Placing bet on ${side.toUpperCase()}`,
+      );
       await loadPromises();
       await loadMyBets(selected.id);
       const updated = promises.find((p) => p.id === selected.id);
@@ -211,17 +251,14 @@ export default function App() {
 
   const handleResolve = async () => {
     if (!account || !selected) return;
-    setLoading(true);
-    setLoadingMsg('The oracle is consulting its sources...');
-    setError('');
     try {
-      const client = getClient(account);
-      await client.writeContract({
-        address: CONTRACT_ADDRESS as any,
-        functionName: 'resolve',
-        args: [selected.id],
-        value: BigInt(0),
-      });
+      await sendWrite(
+        'resolve',
+        'resolve',
+        [selected.id],
+        BigInt(0),
+        'The oracle is consulting its sources (may take 30–120s)',
+      );
       await loadPromises();
       await loadMyBets(selected.id);
     } catch (err: any) {
@@ -234,17 +271,14 @@ export default function App() {
 
   const handleClaim = async () => {
     if (!account || !selected) return;
-    setLoading(true);
-    setLoadingMsg('Claiming winnings...');
-    setError('');
     try {
-      const client = getClient(account);
-      await client.writeContract({
-        address: CONTRACT_ADDRESS as any,
-        functionName: 'claim_winnings',
-        args: [selected.id],
-        value: BigInt(0),
-      });
+      await sendWrite(
+        'claim_winnings',
+        'claim_winnings',
+        [selected.id],
+        BigInt(0),
+        'Claiming winnings',
+      );
       await loadPromises();
       await loadMyBets(selected.id);
     } catch (err: any) {
@@ -343,6 +377,25 @@ export default function App() {
 
       {/* ===== ERROR BANNER ===== */}
       {error && <div className="error-banner">{error}</div>}
+
+      {/* ===== LAST TX BANNER ===== */}
+      {lastTx && (
+        <div className="tx-banner">
+          <span className="tx-label">{lastTx.label}</span>
+          <span className={`tx-status tx-${lastTx.status.split(' ')[0].toLowerCase()}`}>
+            {lastTx.status}
+          </span>
+          <a
+            href={`https://explorer-studio.genlayer.com/tx/${lastTx.hash}`}
+            target="_blank"
+            rel="noreferrer"
+            className="tx-hash"
+          >
+            {lastTx.hash.slice(0, 10)}…{lastTx.hash.slice(-6)}
+          </a>
+          <button className="tx-close" onClick={() => setLastTx(null)} aria-label="Dismiss">✕</button>
+        </div>
+      )}
 
       {/* ===== LOADING OVERLAY ===== */}
       {loading && (

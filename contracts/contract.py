@@ -55,7 +55,7 @@ class Contract(gl.Contract):
         pid = str(int(self.promise_count))
         self.promise_count = u256(int(self.promise_count) + 1)
 
-        sender = _addr_str(gl.message.sender)
+        sender = _addr_str(gl.message.sender_address)
         p = {
             "creator": sender,
             "promiser_name": promiser_name,
@@ -87,7 +87,7 @@ class Contract(gl.Contract):
         if amount < int(self.min_bet):
             raise gl.vm.UserError("Bet below minimum")
 
-        sender = _addr_str(gl.message.sender)
+        sender = _addr_str(gl.message.sender_address)
         bet_key = promise_id + ":" + sender
         existing = int(self.bets_kept.get(bet_key, "0"))
         self.bets_kept[bet_key] = str(existing + amount)
@@ -108,7 +108,7 @@ class Contract(gl.Contract):
         if amount < int(self.min_bet):
             raise gl.vm.UserError("Bet below minimum")
 
-        sender = _addr_str(gl.message.sender)
+        sender = _addr_str(gl.message.sender_address)
         bet_key = promise_id + ":" + sender
         existing = int(self.bets_broken.get(bet_key, "0"))
         self.bets_broken[bet_key] = str(existing + amount)
@@ -198,7 +198,7 @@ Respond ONLY with valid JSON (no markdown, no code fences):
         if p["status"] != "RESOLVED":
             raise gl.vm.UserError("Promise not yet resolved")
 
-        caller = _addr_str(gl.message.sender)
+        caller = _addr_str(gl.message.sender_address)
         bet_key = promise_id + ":" + caller
         verdict = p["verdict"]
 

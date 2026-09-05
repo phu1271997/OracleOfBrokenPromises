@@ -194,6 +194,54 @@ a:hover { text-decoration: underline; }
   border: 1px solid var(--broken);
 }
 
+.tx-banner {
+  position: fixed;
+  top: 132px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 99;
+  background: var(--bg);
+  color: var(--fg);
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 720px;
+  box-shadow: var(--shadow);
+  flex-wrap: wrap;
+}
+.tx-banner .tx-label { font-weight: 600; opacity: 0.85; }
+.tx-banner .tx-status {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  background: var(--border);
+}
+.tx-banner .tx-finalized { background: var(--kept-dim); color: var(--kept); }
+.tx-banner .tx-pending { background: var(--border); color: var(--fg); }
+.tx-banner .tx-hash {
+  font-family: monospace;
+  font-size: 0.8rem;
+  text-decoration: underline;
+  color: var(--accent);
+}
+.tx-banner .tx-close {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: var(--fg);
+  opacity: 0.6;
+  cursor: pointer;
+  font-size: 1rem;
+}
+.tx-banner .tx-close:hover { opacity: 1; }
+
 .loading-overlay {
   position: fixed;
   top: 0;

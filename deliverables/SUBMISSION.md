@@ -27,7 +27,7 @@ Oracle of Broken Promises is a decentralized prediction market for public figure
 ## Contract Address
 
 ```
-0x51ca4D640Aa3848A16ee0c524f1Dd21B49B940e0
+0x80D5E52819Cc36505c9AC1a3cA084b1A4EA85d0c
 ```
 
 Network: GenLayer Studionet (Chain ID 61999)
@@ -38,7 +38,7 @@ Network: GenLayer Studionet (Chain ID 61999)
 
 - **Frontend**: https://oracle-of-broken-promises.vercel.app
 - **GitHub**: https://github.com/phu1271997/OracleOfBrokenPromises
-- **Explorer**: https://explorer-studio.genlayer.com/address/0x51ca4D640Aa3848A16ee0c524f1Dd21B49B940e0
+- **Explorer**: https://explorer-studio.genlayer.com/address/0x80D5E52819Cc36505c9AC1a3cA084b1A4EA85d0c
 
 ---
 

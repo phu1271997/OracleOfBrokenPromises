@@ -6,7 +6,7 @@ const CHAIN = studionet;
 const ENDPOINT = "https://studio.genlayer.com/api";
 
 // UPDATE THIS after redeploying the contract
-const CONTRACT = "0x51ca4D640Aa3848A16ee0c524f1Dd21B49B940e0";
+const CONTRACT = "0x80D5E52819Cc36505c9AC1a3cA084b1A4EA85d0c";
 
 function loadEnv() {
   try {
