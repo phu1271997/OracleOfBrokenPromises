@@ -10,7 +10,7 @@ const CHAIN = {
 const ENDPOINT = "https://studio.genlayer.com/api";
 
 // UPDATE THIS after redeploying the contract
-const CONTRACT = "0xba9b91f159D08A0a1a84251B2559Cc3EF874E548";
+const CONTRACT = "0x51ca4D640Aa3848A16ee0c524f1Dd21B49B940e0";
 
 function loadEnv() {
   try {
@@ -29,8 +29,15 @@ function loadEnv() {
 
 loadEnv();
 
-const pk1 = process.env.PRIVATE_KEY_1;
-const pk2 = process.env.PRIVATE_KEY_2;
+function normalizeKey(raw) {
+  if (!raw) return null;
+  let k = raw.trim().replace(/^["']|["']$/g, "");
+  if (!k.startsWith("0x") && !k.startsWith("0X")) k = "0x" + k;
+  return k.toLowerCase();
+}
+
+const pk1 = normalizeKey(process.env.PRIVATE_KEY_1);
+const pk2 = normalizeKey(process.env.PRIVATE_KEY_2);
 if (!pk1 || !pk2) {
   console.error("Set PRIVATE_KEY_1 and PRIVATE_KEY_2 in .env.seed");
   process.exit(1);
