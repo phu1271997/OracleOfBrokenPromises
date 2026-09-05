@@ -121,8 +121,8 @@ export default function App() {
       }
       setPromises(items);
     } catch (err: any) {
-      console.error('Load error:', err);
-      setError('Could not load promises — the RPC may be temporarily unavailable.');
+      console.error('Load error:', err, JSON.stringify(err));
+      setError('Could not load promises — ' + (err?.message || String(err)).slice(0, 200));
     }
   }, []);
 

@@ -1,7 +1,6 @@
 # { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
 from genlayer import *
 import json
-from datetime import date
 from dataclasses import dataclass
 
 
@@ -87,7 +86,8 @@ class Contract(gl.Contract):
         p = self.promises[promise_id]
         if p.status != "OPEN":
             raise gl.UserError("Promise is not open for betting")
-        if str(date.today()) >= p.deadline:
+        today = gl.message_raw['datetime'][:10]
+        if today >= p.deadline:
             raise gl.UserError("Betting closed — deadline has passed")
 
         amount = bigint(gl.message.value)
@@ -110,7 +110,8 @@ class Contract(gl.Contract):
         p = self.promises[promise_id]
         if p.status != "OPEN":
             raise gl.UserError("Promise is not open for betting")
-        if str(date.today()) >= p.deadline:
+        today = gl.message_raw['datetime'][:10]
+        if today >= p.deadline:
             raise gl.UserError("Betting closed — deadline has passed")
 
         amount = bigint(gl.message.value)
@@ -133,7 +134,8 @@ class Contract(gl.Contract):
         p = self.promises[promise_id]
         if p.status != "OPEN":
             raise gl.UserError("Promise already resolved")
-        if str(date.today()) < p.deadline:
+        today = gl.message_raw['datetime'][:10]
+        if today < p.deadline:
             raise gl.UserError("Cannot resolve before deadline")
 
         promiser_name = p.promiser_name
