@@ -1,12 +1,8 @@
 import { createClient, createAccount } from "genlayer-js";
+import { studionet } from "genlayer-js/chains";
 import { readFileSync } from "fs";
 
-const CHAIN = {
-  id: 61999,
-  name: "Genlayer Studio Network",
-  rpcUrls: { default: { http: ["https://studio.genlayer.com/api"] } },
-  nativeCurrency: { name: "GEN Token", symbol: "GEN", decimals: 18 },
-};
+const CHAIN = studionet;
 const ENDPOINT = "https://studio.genlayer.com/api";
 
 // UPDATE THIS after redeploying the contract
