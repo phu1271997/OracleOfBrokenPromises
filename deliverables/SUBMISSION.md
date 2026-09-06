@@ -36,7 +36,7 @@ Network: GenLayer Studionet (Chain ID 61999)
 
 ## Links
 
-- **Frontend**: https://oracle-of-broken-promises.vercel.app
+- **Frontend**: https://oracle-of-broken-promises-ten.vercel.app
 - **GitHub**: https://github.com/phu1271997/OracleOfBrokenPromises
 - **Explorer**: https://explorer-studio.genlayer.com/address/0x80D5E52819Cc36505c9AC1a3cA084b1A4EA85d0c
 

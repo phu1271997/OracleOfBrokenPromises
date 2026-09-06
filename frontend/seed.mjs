@@ -135,7 +135,7 @@ async function main() {
       console.log(`Promise #${i}: status=${p.status} verdict=${p.verdict} pool_kept=${p.pool_kept} pool_broken=${p.pool_broken}`);
     }
   }
-  console.log("\nDone. Check https://oracle-of-broken-promises.vercel.app");
+  console.log("\nDone. Check https://oracle-of-broken-promises-ten.vercel.app");
 }
 
 main().catch(console.error);
